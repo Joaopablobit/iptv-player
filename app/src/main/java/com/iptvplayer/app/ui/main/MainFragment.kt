@@ -1,9 +1,9 @@
 package com.iptvplayer.app.ui.main
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.leanback.app.BrowseSupportFragment
@@ -25,7 +25,6 @@ class MainFragment : BrowseSupportFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
-
         setupUI()
         setupEventListeners()
     }
@@ -42,28 +41,20 @@ class MainFragment : BrowseSupportFragment() {
         isHeadersTransitionOnBackEnabled = true
         brandColor = ContextCompat.getColor(requireContext(), R.color.brand_color)
         searchAffordanceColor = ContextCompat.getColor(requireContext(), R.color.search_color)
-
         rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
         adapter = rowsAdapter
     }
 
     private fun setupEventListeners() {
-        // Play channel on select
         onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
             when (item) {
                 is Channel -> playChannel(item)
                 is ActionItem -> handleAction(item)
             }
         }
-
-        // Long press = toggle favorite
         onItemViewSelectedListener = OnItemViewSelectedListener { _, item, _, _ ->
-            if (item is Channel) {
-                viewModel.setSelectedChannel(item)
-            }
+            if (item is Channel) viewModel.setSelectedChannel(item)
         }
-
-        // Search
         setOnSearchClickedListener {
             startActivity(Intent(requireContext(), SearchActivity::class.java))
         }
@@ -73,13 +64,9 @@ class MainFragment : BrowseSupportFragment() {
         viewModel.channelGroups.observe(viewLifecycleOwner) { groups ->
             buildRows(groups)
         }
-
         viewModel.isLoading.observe(viewLifecycleOwner) { loading ->
-            progressBarManager.apply {
-                if (loading) show() else hide()
-            }
+            if (loading) progressBarManager.show() else progressBarManager.hide()
         }
-
         viewModel.error.observe(viewLifecycleOwner) { error ->
             error?.let {
                 Toast.makeText(context, it, Toast.LENGTH_LONG).show()
@@ -90,18 +77,12 @@ class MainFragment : BrowseSupportFragment() {
 
     private fun buildRows(groups: List<ChannelGroup>) {
         rowsAdapter.clear()
-
-        // Add action row (Settings, Add Playlist)
         addActionRow()
-
-        // Add channel group rows
         val channelPresenter = ChannelCardPresenter()
         groups.forEach { group ->
             val listRowAdapter = ArrayObjectAdapter(channelPresenter)
             listRowAdapter.addAll(0, group.channels)
-
-            val header = HeaderItem(group.name)
-            rowsAdapter.add(ListRow(header, listRowAdapter))
+            rowsAdapter.add(ListRow(HeaderItem(group.name), listRowAdapter))
         }
     }
 
@@ -111,7 +92,6 @@ class MainFragment : BrowseSupportFragment() {
         actionAdapter.add(ActionItem(R.id.action_add_playlist, getString(R.string.add_playlist), R.drawable.ic_add))
         actionAdapter.add(ActionItem(R.id.action_settings, getString(R.string.settings), R.drawable.ic_settings))
         actionAdapter.add(ActionItem(R.id.action_all_channels, getString(R.string.all_channels), R.drawable.ic_tv))
-
         rowsAdapter.add(ListRow(HeaderItem(getString(R.string.quick_actions)), actionAdapter))
     }
 
@@ -138,36 +118,30 @@ class MainFragment : BrowseSupportFragment() {
     }
 
     private fun showSetupDialog() {
-        if (viewModel.getPlaylists().isEmpty()) {
-            showAddPlaylistDialog()
-        }
+        if (viewModel.getPlaylists().isEmpty()) showAddPlaylistDialog()
     }
 
-    fun onBackPressed(): Boolean {
-        // If headers are showing, let system handle back
-        return false
-    }
+    fun onBackPressed(): Boolean = false
 }
 
 data class ActionItem(val id: Int, val title: String, val iconRes: Int)
 
 class ActionPresenter : Presenter() {
     override fun onCreateViewHolder(parent: android.view.ViewGroup): ViewHolder {
-        val view = android.widget.ImageCardView(parent.context).apply {
-            setMainImageScaleType(android.widget.ImageView.ScaleType.CENTER_INSIDE)
-            setMainImageDimensions(160, 120)
-            isFocusable = true
-            isFocusableInTouchMode = true
-        }
+        val view = androidx.leanback.widget.ImageCardView(parent.context)
+        view.setMainImageScaleType(ImageView.ScaleType.CENTER_INSIDE)
+        view.setMainImageDimensions(160, 120)
+        view.isFocusable = true
+        view.isFocusableInTouchMode = true
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, item: Any?) {
         val action = item as? ActionItem ?: return
-        val cardView = viewHolder.view as android.widget.ImageCardView
+        val cardView = viewHolder.view as androidx.leanback.widget.ImageCardView
         cardView.titleText = action.title
         cardView.setMainImageDrawable(
-            androidx.core.content.ContextCompat.getDrawable(cardView.context, action.iconRes)
+            ContextCompat.getDrawable(cardView.context, action.iconRes)
         )
     }
 
