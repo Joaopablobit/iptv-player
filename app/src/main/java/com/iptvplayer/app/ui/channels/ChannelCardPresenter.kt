@@ -1,8 +1,8 @@
 package com.iptvplayer.app.ui.channels
 
 import android.view.ViewGroup
-import android.widget.ImageCardView
 import android.widget.ImageView
+import androidx.leanback.widget.ImageCardView
 import androidx.leanback.widget.Presenter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -15,12 +15,11 @@ class ChannelCardPresenter : Presenter() {
     private val CARD_HEIGHT = 150
 
     override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
-        val cardView = ImageCardView(parent.context).apply {
-            setMainImageScaleType(ImageView.ScaleType.CENTER_CROP)
-            setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT)
-            isFocusable = true
-            isFocusableInTouchMode = true
-        }
+        val cardView = ImageCardView(parent.context)
+        cardView.setMainImageScaleType(ImageView.ScaleType.CENTER_CROP)
+        cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT)
+        cardView.isFocusable = true
+        cardView.isFocusableInTouchMode = true
         return ViewHolder(cardView)
     }
 
@@ -42,7 +41,6 @@ class ChannelCardPresenter : Presenter() {
             cardView.mainImageView?.setImageResource(R.drawable.ic_tv_placeholder)
         }
 
-        // Show favorite indicator
         if (channel.isFavorite) {
             cardView.badgeImage = cardView.context.getDrawable(R.drawable.ic_star)
         } else {
